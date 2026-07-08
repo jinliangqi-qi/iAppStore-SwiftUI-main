@@ -51,30 +51,34 @@ public struct APIService: Sendable {
             let url = APIService.shared.baseURL
             switch self {
             case .topFreeApplications(let cid, let country, let limit):
-                return url + "rss/topfreeapplications/limit=\(limit)/genre=\(cid)/json?cc=\(country)"
+                return url + "rss/topfreeapplications/limit=\(limit)/genre=\(encode(cid))/json?cc=\(encode(country))"
             case .topFreeiPadApplications(let cid, let country, let limit):
-                return url + "rss/topFreeiPadApplications/limit=\(limit)/genre=\(cid)/json?cc=\(country)"
+                return url + "rss/topFreeiPadApplications/limit=\(limit)/genre=\(encode(cid))/json?cc=\(encode(country))"
             case .topPaidApplications(let cid, let country, let limit):
-                return url + "rss/topPaidApplications/limit=\(limit)/genre=\(cid)/json?cc=\(country)"
+                return url + "rss/topPaidApplications/limit=\(limit)/genre=\(encode(cid))/json?cc=\(encode(country))"
             case .topPaidiPadApplications(let cid, let country, let limit):
-                return url + "rss/topPaidiPadApplications/limit=\(limit)/genre=\(cid)/json?cc=\(country)"
+                return url + "rss/topPaidiPadApplications/limit=\(limit)/genre=\(encode(cid))/json?cc=\(encode(country))"
             case .topGrossingApplications(let cid, let country, let limit):
-                return url + "rss/topGrossingApplications/limit=\(limit)/genre=\(cid)/json?cc=\(country)"
+                return url + "rss/topGrossingApplications/limit=\(limit)/genre=\(encode(cid))/json?cc=\(encode(country))"
             case .topGrossingiPadApplications(let cid, let country, let limit):
-                return url + "rss/topGrossingiPadApplications/limit=\(limit)/genre=\(cid)/json?cc=\(country)"
+                return url + "rss/topGrossingiPadApplications/limit=\(limit)/genre=\(encode(cid))/json?cc=\(encode(country))"
             case .newApplications(let cid, let country, let limit):
-                return url + "rss/newApplications/limit=\(limit)/genre=\(cid)/json?cc=\(country)"
+                return url + "rss/newApplications/limit=\(limit)/genre=\(encode(cid))/json?cc=\(encode(country))"
             case .newFreeApplications(let cid, let country, let limit):
-                return url + "rss/newFreeApplications/limit=\(limit)/genre=\(cid)/json?cc=\(country)"
+                return url + "rss/newFreeApplications/limit=\(limit)/genre=\(encode(cid))/json?cc=\(encode(country))"
             case .newPaidApplications(let cid, let country, let limit):
-                return url + "rss/newPaidApplications/limit=\(limit)/genre=\(cid)/json?cc=\(country)"
+                return url + "rss/newPaidApplications/limit=\(limit)/genre=\(encode(cid))/json?cc=\(encode(country))"
             case .searchApp(let word, let country, let limit):
-                return url + "search?term=\(word)&country=\(country)&limit=\(limit)&entity=software"
+                return url + "search?term=\(encode(word))&country=\(encode(country))&limit=\(limit)&entity=software"
             case .lookupApp(let appid, let country):
-                return url + "\(country)/lookup?id=\(appid)"
+                return url + "\(encode(country))/lookup?id=\(encode(appid))"
             case .lookupBundleId(let appid, let country):
-                return url + "\(country)/lookup?bundleId=\(appid)"
+                return url + "\(encode(country))/lookup?bundleId=\(encode(appid))"
             }
+        }
+        
+        private func encode(_ string: String) -> String {
+            return string.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? string
         }
     }
     

@@ -77,9 +77,12 @@ class AppRankModel: ObservableObject {
     ///   - regionName: 地区名称（如"中国"、"美国"等）
     func fetchRankData(_ rankName: String, _ categoryName: String, _ regionName: String) {
         
-        // 根据名称获取对应的ID
-        let rankId = TSMGConstants.rankingTypeListIds[rankName]!
-        let categoryId = TSMGConstants.categoryTypeListIds[categoryName]!
+        guard let rankId = TSMGConstants.rankingTypeListIds[rankName],
+              let categoryId = TSMGConstants.categoryTypeListIds[categoryName] else {
+            self.isShowAlert = true
+            self.alertMsg = "无效的排行榜或分类参数"
+            return
+        }
         let regionId = TSMGConstants.regionTypeListIds[regionName] ?? "cn"
         var endpoint: APIService.Endpoint
         
@@ -112,7 +115,8 @@ class AppRankModel: ObservableObject {
         isLoading = true
         
         // 发起API请求
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             let result: Result<AppRankM, APIService.APIError> = await APIService.shared.request(endpoint: endpoint)
             
             // 结束加载状态
@@ -128,8 +132,7 @@ class AppRankModel: ObservableObject {
                 // 请求失败，显示错误信息
                 print("api reqeust erro: \(error)")
                 self.isShowAlert = true
-                self.alertMsg = "\(error)";
-                break
+                self.alertMsg = "\(error)"
             }
         }
     }

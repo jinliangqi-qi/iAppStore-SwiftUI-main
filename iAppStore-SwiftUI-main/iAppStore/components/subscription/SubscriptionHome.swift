@@ -84,7 +84,7 @@ struct SubscriptionHome: View {
             List {
                 ForEach(filteredSubscriptions, id: \.startTimeStamp) { item in
                     NavigationLink {
-                        AppDetailView(appId: String(item.appId), regionName: item.regionName, item: nil)
+                        AppDetailView(appId: String(item.appId), regionName: item.regionName, item: nil, rank: nil)
                     } label: {
                         SubscriptionCell(item: item)
                     }

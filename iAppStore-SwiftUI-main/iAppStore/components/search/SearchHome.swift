@@ -21,7 +21,22 @@ struct SearchHome: View {
     @State private var isRegionPickerPresented = false
     @FocusState private var isSearchFocused: Bool
     @StateObject private var appModel = AppDetailModel()
-    @State private var searchHistory: [String] = UserDefaults.standard.stringArray(forKey: "searchHistory") ?? []
+    @AppStorage("searchHistory") private var searchHistoryRaw: String = ""
+    private var searchHistory: [String] {
+        get {
+            guard let data = searchHistoryRaw.data(using: .utf8),
+                  let array = try? JSONDecoder().decode([String].self, from: data) else {
+                return []
+            }
+            return array
+        }
+        set {
+            if let data = try? JSONEncoder().encode(newValue),
+               let string = String(data: data, encoding: .utf8) {
+                searchHistoryRaw = string
+            }
+        }
+    }
     private let hotSearchTerms = ["微信", "抖音", "王者荣耀", "支付宝", "淘宝", "京东", "美团", "饿了么"]
     
     // MARK: - Body
@@ -125,8 +140,7 @@ struct SearchHome: View {
                 Spacer()
                 Button {
                     withAnimation(AppTheme.Animation.default) {
-                        searchHistory.removeAll()
-                        UserDefaults.standard.set([], forKey: "searchHistory")
+                        searchHistory = []
                     }
                 } label: {
                     Text("清除").font(AppTheme.Typography.subheadline).foregroundStyle(AppTheme.Colors.primary)
@@ -165,7 +179,7 @@ struct SearchHome: View {
         List {
             ForEach(Array(appModel.results.enumerated()), id: \.element.trackId) { index, item in
                 NavigationLink {
-                    AppDetailView(appId: String(item.trackId), regionName: regionName, item: nil)
+                    AppDetailView(appId: String(item.trackId), regionName: regionName, item: nil, rank: nil)
                 } label: {
                     SearchResultCell(index: index, item: item)
                 }
@@ -186,10 +200,11 @@ struct SearchHome: View {
     
     private func saveSearchHistory() {
         guard !searchText.isEmpty else { return }
-        searchHistory.removeAll { $0 == searchText }
-        searchHistory.insert(searchText, at: 0)
-        if searchHistory.count > 20 { searchHistory = Array(searchHistory.prefix(20)) }
-        UserDefaults.standard.set(searchHistory, forKey: "searchHistory")
+        var history = searchHistory
+        history.removeAll { $0 == searchText }
+        history.insert(searchText, at: 0)
+        if history.count > 20 { history = Array(history.prefix(20)) }
+        searchHistory = history
     }
     
     private func hideKeyboard() {

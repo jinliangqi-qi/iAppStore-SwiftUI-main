@@ -142,7 +142,7 @@ struct RankHome: View {
         LazyVStack(spacing: 1) {
             ForEach(Array(appRankModel.results.enumerated()), id: \.element.imName.label) { index, item in
                 NavigationLink {
-                    AppDetailView(appId: item.id.attributes.imID, regionName: regionName, item: item)
+                    AppDetailView(appId: item.id.attributes.imID, regionName: regionName, item: item, rank: index + 1)
                 } label: {
                     ModernRankCell(index: index, item: item, regionName: regionName)
                 }

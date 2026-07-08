@@ -20,6 +20,7 @@ struct AppDetailView: View {
     let appId: String
     let regionName: String
     let item: AppRank?
+    let rank: Int?
     
     // MARK: - State
     @StateObject private var appModel = AppDetailModel()
@@ -139,7 +140,7 @@ struct AppDetailView: View {
                 Divider().frame(height: 40)
                 QuickInfoItem(title: "年龄", value: app.contentAdvisoryRating, subtitle: "岁")
                 Divider().frame(height: 40)
-                QuickInfoItem(title: "排行榜", value: "#\(item != nil ? "1" : "-")", subtitle: app.primaryGenreName)
+                QuickInfoItem(title: "排行榜", value: rank != nil ? "#\(rank!)" : "-", subtitle: app.primaryGenreName)
                 Divider().frame(height: 40)
                 QuickInfoItem(title: "开发者", value: "", subtitle: app.sellerName, icon: "person.crop.square")
                 Divider().frame(height: 40)
@@ -310,5 +311,5 @@ struct AppDetailView: View {
 
 // MARK: - Preview
 #Preview {
-    NavigationStack { AppDetailView(appId: "1669437212", regionName: "中国", item: nil) }
+    NavigationStack { AppDetailView(appId: "1669437212", regionName: "中国", item: nil, rank: nil) }
 }

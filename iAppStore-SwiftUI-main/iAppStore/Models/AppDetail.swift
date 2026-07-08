@@ -8,6 +8,18 @@
 
 import Foundation
 
+struct Size: Codable, Sendable {
+    let width: Double
+    let height: Double
+    
+    init(width: Double, height: Double) {
+        self.width = width
+        self.height = height
+    }
+    
+    static var zero: Size { Size(width: 0, height: 0) }
+}
+
 // MARK: - AppDetailM
 /// App详情API响应的根模型
 /// 包含查询结果数量和App详情数组
@@ -158,18 +170,18 @@ struct AppDetail: Codable {
         return String(format: "%.1f", averageUserRating)
     }
     
-    /// 截图展示大小
-    var screenShotSize: CGSize {
+    /// 截图展示大小（纯Swift类型）
+    var screenShotSize: Size {
         let width = 200.0
-        let defaultSize = CGSize(width: width, height: width)
+        let defaultSize = Size(width: width, height: width)
         let url = screenshotUrls?.first ?? ""
         let size = url.imageAppleSize()
-        guard size != CGSize.zero else {
+        guard size != Size.zero else {
             return defaultSize
         }
 
-        let height = Double(size.height) / Double(size.width) * width
-        return CGSize(width: width, height: height);
+        let height = size.height / size.width * width
+        return Size(width: width, height: height)
     }
     
     static func getNewModel(_ artistId: String) -> AppDetail? {

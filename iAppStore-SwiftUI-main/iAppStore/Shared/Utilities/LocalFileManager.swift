@@ -13,28 +13,38 @@ final class LocalFileManager: Sendable {
     static let instance = LocalFileManager()
     private init() {}
     
+    private let fileQueue = DispatchQueue(label: "com.iappstore.filemanager", qos: .default, attributes: .concurrent)
+    
     func saveImage(image: UIImage, imageName: String, folderName: String) {
-        createFolderIfNeeded(folderName: folderName)
-        
-        guard let data = image.pngData(),
-              let url = getURLForImage(imageName: imageName, folderName: folderName)
-        else {
-            return
-        }
-        
-        do {
-            try data.write(to: url)
-        } catch let error {
-            print("Error saving image. ImageName: \(imageName) \(error)")
+        fileQueue.async(flags: .barrier) { [weak self] in
+            guard let self = self else { return }
+            self.createFolderIfNeeded(folderName: folderName)
+            
+            guard let data = image.pngData(),
+                  let url = self.getURLForImage(imageName: imageName, folderName: folderName)
+            else {
+                return
+            }
+            
+            do {
+                try data.write(to: url)
+            } catch let error {
+                print("Error saving image. ImageName: \(imageName) \(error)")
+            }
         }
     }
     
     func getImage(imageName: String, folderName: String) -> UIImage? {
-        guard let url = getURLForImage(imageName: imageName, folderName: folderName),
-              FileManager.default.fileExists(atPath: url.path) else {
-                  return nil
-              }
-        return UIImage(contentsOfFile: url.path)
+        var result: UIImage?
+        fileQueue.sync { [weak self] in
+            guard let self = self else { return }
+            guard let url = self.getURLForImage(imageName: imageName, folderName: folderName),
+                  FileManager.default.fileExists(atPath: url.path) else {
+                      return
+                  }
+            result = UIImage(contentsOfFile: url.path)
+        }
+        return result
     }
     
     // MARK: Private
@@ -69,36 +79,41 @@ final class LocalFileManager: Sendable {
 }
 
 extension LocalFileManager {
-    func saveModel<T: Encodable>(model: [T], modelName: String, folderName: String ) {
-        
-        createFolderIfNeeded(folderName: folderName)
-        
-        guard let url = getURLForModel(modelName: modelName, folderName: folderName) else {
-            return
-        }
-        
-        do {
-            let data = try JSONEncoder().encode(model)
-            try data.write(to: url)
-        } catch let error {
-            print("Error save model. ModelName: \(modelName) \(error)")
+    func saveModel<T: Encodable>(model: [T], modelName: String, folderName: String) {
+        fileQueue.async(flags: .barrier) { [weak self] in
+            guard let self = self else { return }
+            self.createFolderIfNeeded(folderName: folderName)
+            
+            guard let url = self.getURLForModel(modelName: modelName, folderName: folderName) else {
+                return
+            }
+            
+            do {
+                let data = try JSONEncoder().encode(model)
+                try data.write(to: url)
+            } catch let error {
+                print("Error save model. ModelName: \(modelName) \(error)")
+            }
         }
     }
     
     func getModel<T: Decodable>(modelName: String, folderName: String) -> [T] {
-        guard let url = getURLForModel(modelName: modelName, folderName: folderName),
-                FileManager.default.fileExists(atPath: url.path)
-                else {
-            return []
+        var result: [T] = []
+        fileQueue.sync { [weak self] in
+            guard let self = self else { return }
+            guard let url = self.getURLForModel(modelName: modelName, folderName: folderName),
+                  FileManager.default.fileExists(atPath: url.path) else {
+                return
+            }
+            
+            do {
+                let data = try Data(contentsOf: url)
+                result = try JSONDecoder().decode([T].self, from: data)
+            } catch {
+                print("Error get model, error: \(error)")
+            }
         }
-       
-        do {
-            let data = try Data(contentsOf: url)
-            return try JSONDecoder().decode([T].self, from: data)
-        } catch {
-            print("Error get model, error: \(error)")
-            return []
-        }
+        return result
     }
     
     private func getURLForModel(modelName: String, folderName: String) -> URL? {
