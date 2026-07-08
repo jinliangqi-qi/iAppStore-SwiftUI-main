@@ -48,6 +48,8 @@ struct FilterTag: View {
         .buttonStyle(PlainButtonStyle())
         .scaleEffect(isPressed ? 0.95 : 1.0)
         .animation(AppTheme.Animation.press, value: isPressed)
+        .accessibilityLabel(title)
+        .accessibilityHint("点击展开筛选选项")
     }
 }
 
@@ -86,6 +88,9 @@ struct ModernRankCell: View {
         .background(AppTheme.Colors.Background.primary)
         .scaleEffect(isPressed ? 0.98 : 1.0)
         .animation(AppTheme.Animation.press, value: isPressed)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("第\(index + 1)名，\(item.imName.label)，\(item.category.attributes.label)")
+        .accessibilityHint("查看应用详情")
         .contextMenu {
             AppContextMenu(
                 appleID: item.id.attributes.imID,

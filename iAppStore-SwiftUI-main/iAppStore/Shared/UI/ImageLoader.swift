@@ -100,9 +100,10 @@ struct AsyncImageLoader<Placeholder: View, ImageContent: View>: View {
 // MARK: - Image Content Extensions
 extension Image {
     /// 将 SwiftUI Image 转换为 UIImage
+    @MainActor
     func asUIImage() -> UIImage? {
         let renderer = ImageRenderer(content: self)
-        renderer.scale = UIScreen.main.scale
+        renderer.scale = UITraitCollection.current.displayScale
         return renderer.uiImage
     }
 }
@@ -151,22 +152,5 @@ struct ImageLoaderView<Placeholder: View, ConfiguredImage: View>: View {
             image: image,
             onLoaded: completion
         )
-    }
-}
-
-// MARK: - LocalFileManager Async Extension
-extension LocalFileManager {
-    /// 异步获取图片
-    func getImageAsync(imageName: String, folderName: String) async -> UIImage? {
-        return await withCheckedContinuation { continuation in
-            fileQueue.async {
-                guard let url = self.getURLForImage(imageName: imageName, folderName: folderName),
-                      FileManager.default.fileExists(atPath: url.path) else {
-                    continuation.resume(returning: nil)
-                    return
-                }
-                continuation.resume(returning: UIImage(contentsOfFile: url.path))
-            }
-        }
     }
 }

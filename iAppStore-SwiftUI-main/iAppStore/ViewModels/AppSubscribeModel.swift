@@ -15,12 +15,14 @@ import Foundation
 class AppSubscribeModel: ObservableObject {
         
     /// 订阅列表
-    /// 当数据发生变化时自动保存到本地文件
     @Published private(set) var subscribes: [AppSubscribe] {
         didSet {
-            saveSubscribes()
+            needsSave = true
         }
     }
+    
+    /// 标记是否需要保存（批量更新后统一保存）
+    private var needsSave = false
     
     /// 定时器取消器
     private var timerCancellable: AnyCancellable?
@@ -75,6 +77,7 @@ class AppSubscribeModel: ObservableObject {
     /// - Parameter indexSet: 要删除的索引集合
     func removeAt(indexSet: IndexSet) {
         subscribes.remove(atOffsets: indexSet)
+        saveSubscribes()
     }
     
     /// 添加新的App订阅
@@ -99,6 +102,7 @@ class AppSubscribeModel: ObservableObject {
         )
         
         subscribes.append(subscribe)
+        saveSubscribes()
     }
     
     /// 检查指定App是否已存在订阅
@@ -113,6 +117,7 @@ class AppSubscribeModel: ObservableObject {
     private func handleTimerTick() {
         guard !isChecking else { return }
         isChecking = true
+        needsSave = false
         
         Task { [weak self] in
             guard let self = self else { return }
@@ -123,6 +128,11 @@ class AppSubscribeModel: ObservableObject {
                 try? await Task.sleep(nanoseconds: UInt64(self.requestDelay * 1_000_000_000))
             }
             
+            // 批量检查完成后统一保存一次
+            if self.needsSave {
+                self.saveSubscribes()
+                self.needsSave = false
+            }
             self.isChecking = false
         }
     }

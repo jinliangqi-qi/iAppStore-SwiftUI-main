@@ -143,16 +143,26 @@ struct AppDetail: Codable {
     }
     
     var currentVersionReleaseTime: String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
-        if let date = dateFormatter.date(from: currentVersionReleaseDate) as Date? {
-            let dateformat = DateFormatter()
-            dateformat.dateFormat = "yyyy-MM-dd HH:mm:ss"
-            return dateformat.string(from: date)
+        if let date = Self.isoFormatter.date(from: currentVersionReleaseDate) {
+            return Self.displayFormatter.string(from: date)
         } else {
             return currentVersionReleaseDate
         }
     }
+    
+    /// 缓存的 ISO 日期格式化器
+    private static let isoFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
+        return formatter
+    }()
+    
+    /// 缓存的显示日期格式化器
+    private static let displayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        return formatter
+    }()
     
     /// 格式化的文件大小（以MB为单位）
     /// - Returns: 返回格式化后的文件大小字符串，如"25.6 MB"

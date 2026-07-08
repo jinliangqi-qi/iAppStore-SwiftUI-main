@@ -19,6 +19,7 @@ struct FavoritesHome: View {
     
     // MARK: - State
     @StateObject private var favoritesModel = AppFavoritesModel.shared
+    @ObservedObject private var networkChecker = NetworkStateChecker.shared
     @State private var isRefreshing = false
     
     // MARK: - Body
@@ -30,6 +31,11 @@ struct FavoritesHome: View {
             }
             .navigationTitle("收藏")
             .navigationBarTitleDisplayMode(.large)
+            .alert("网络未连接", isPresented: .constant(networkChecker.path.status == .unsatisfied && !favoritesModel.favorites.isEmpty)) {
+                Button("确定", role: .cancel) { }
+            } message: {
+                Text("请检查网络连接后重试")
+            }
         }
         .onAppear { loadData() }
     }

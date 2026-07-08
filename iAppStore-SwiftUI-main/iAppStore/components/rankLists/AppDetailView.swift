@@ -277,9 +277,13 @@ struct AppDetailView: View {
                     .foregroundStyle(isAppFavorites ? .red : AppTheme.Colors.primary)
                     .symbolEffect(.bounce, value: isAppFavorites)
             }
+            .accessibilityLabel(isAppFavorites ? "取消收藏" : "收藏")
+            .accessibilityHint(isAppFavorites ? "从收藏列表中移除" : "添加到收藏列表")
             Button { isShowingQRCode = true } label: {
                 Image(systemName: "qrcode").font(.system(size: 18)).foregroundStyle(AppTheme.Colors.primary)
             }
+            .accessibilityLabel("二维码")
+            .accessibilityHint("显示下载二维码")
         }
     }
     

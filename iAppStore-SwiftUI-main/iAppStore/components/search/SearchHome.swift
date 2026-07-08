@@ -21,6 +21,8 @@ struct SearchHome: View {
     @State private var isRegionPickerPresented = false
     @FocusState private var isSearchFocused: Bool
     @StateObject private var appModel = AppDetailModel()
+    @ObservedObject private var networkChecker = NetworkStateChecker.shared
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @AppStorage("searchHistory") private var searchHistoryRaw: String = ""
     private var searchHistory: [String] {
         get {
@@ -55,6 +57,11 @@ struct SearchHome: View {
                 RegionPickerSheet(selectedRegion: $regionName, onRegionChanged: {
                     if !searchText.isEmpty { performSearch() }
                 })
+            }
+            .alert("网络未连接", isPresented: .constant(networkChecker.path.status == .unsatisfied)) {
+                Button("确定", role: .cancel) { }
+            } message: {
+                Text("请检查网络连接后重试")
             }
         }
     }
@@ -91,6 +98,7 @@ struct SearchHome: View {
                         Image(systemName: "xmark.circle.fill").font(.body).foregroundStyle(AppTheme.Colors.Text.tertiary)
                     }
                     .buttonStyle(PlainButtonStyle())
+                    .accessibilityLabel("清除搜索内容")
                 }
             }
             .padding(.horizontal, AppTheme.Spacing.md).padding(.vertical, AppTheme.Spacing.sm)
@@ -119,6 +127,8 @@ struct SearchHome: View {
             }
             .foregroundStyle(AppTheme.Colors.primary)
         }
+        .accessibilityLabel("选择地区，当前\(regionName)")
+        .accessibilityHint("点击选择搜索地区")
     }
     
     // MARK: - Search Suggestions View
@@ -189,19 +199,27 @@ struct SearchHome: View {
     
     // MARK: - Search Results List
     private var searchResultsList: some View {
-        List {
-            ForEach(Array(appModel.results.enumerated()), id: \.element.trackId) { index, item in
-                NavigationLink {
-                    AppDetailView(appId: String(item.trackId), regionName: regionName, item: nil, rank: nil)
-                } label: {
-                    SearchResultCell(index: index, item: item)
+        let columns = horizontalSizeClass == .regular
+            ? [GridItem(.flexible()), GridItem(.flexible())]
+            : [GridItem(.flexible())]
+        
+        return ScrollView {
+            LazyVGrid(columns: columns, spacing: AppTheme.Spacing.sm) {
+                ForEach(Array(appModel.results.enumerated()), id: \.element.trackId) { index, item in
+                    NavigationLink {
+                        AppDetailView(appId: String(item.trackId), regionName: regionName, item: nil, rank: nil)
+                    } label: {
+                        SearchResultCell(index: index, item: item)
+                            .padding(AppTheme.Spacing.default)
+                            .background(AppTheme.Colors.Background.primary)
+                            .clipShape(RoundedRectangle(cornerRadius: AppTheme.CornerRadius.medium))
+                    }
+                    .buttonStyle(PlainButtonStyle())
                 }
-                .listRowInsets(EdgeInsets(top: AppTheme.Spacing.sm, leading: AppTheme.Spacing.default,
-                                         bottom: AppTheme.Spacing.sm, trailing: AppTheme.Spacing.default))
-                .listRowBackground(AppTheme.Colors.Background.primary)
             }
+            .padding(.horizontal, AppTheme.Spacing.default)
+            .padding(.vertical, AppTheme.Spacing.sm)
         }
-        .listStyle(.plain)
         .scrollDismissesKeyboard(.immediately)
     }
     

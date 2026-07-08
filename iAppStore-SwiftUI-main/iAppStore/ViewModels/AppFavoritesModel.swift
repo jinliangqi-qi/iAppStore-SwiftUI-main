@@ -104,18 +104,15 @@ class AppFavoritesModel: ObservableObject {
         var details: [AppDetail] = []
         
         for favorite in favoriteIds {
-            do {
-                let result = await APIService.shared.request(
-                    endpoint: .lookupApp(appid: favorite.appId, country: TSMGConstants.regionTypeListCodes[favorite.regionName] ?? "cn")
-                )
-                
-                if case .success(let response as AppDetailM) = result {
-                    if let appDetail = response.results.first {
-                        details.append(appDetail)
-                    }
+            let regionId = TSMGConstants.regionTypeListIds[favorite.regionName] ?? "cn"
+            let result: Result<AppDetailM, APIService.APIError> = await APIService.shared.request(
+                endpoint: .lookupApp(appid: favorite.appId, country: regionId)
+            )
+            
+            if case .success(let response) = result {
+                if let appDetail = response.results.first {
+                    details.append(appDetail)
                 }
-            } catch {
-                continue
             }
         }
         

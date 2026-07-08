@@ -24,6 +24,14 @@ struct RankHome: View {
     @StateObject private var appRankModel = AppRankModel()
     @State private var isFilterExpanded = false
     @State private var isRefreshing = false
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    
+    /// iPad 双列布局列数
+    private var gridColumns: [GridItem] {
+        horizontalSizeClass == .regular
+            ? [GridItem(.flexible()), GridItem(.flexible())]
+            : [GridItem(.flexible())]
+    }
     
     // MARK: - Body
     var body: some View {
@@ -142,7 +150,7 @@ struct RankHome: View {
     
     // MARK: - Rank Cards Section
     private var rankCardsSection: some View {
-        LazyVStack(spacing: 1) {
+        LazyVGrid(columns: gridColumns, spacing: 1) {
             ForEach(Array(appRankModel.results.enumerated()), id: \.element.imName.label) { index, item in
                 NavigationLink {
                     AppDetailView(appId: item.id.attributes.imID, regionName: regionName, item: item, rank: index + 1)
@@ -168,6 +176,8 @@ struct RankHome: View {
             Image(systemName: isFilterExpanded ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
                 .font(.system(size: 20)).symbolRenderingMode(.hierarchical).foregroundStyle(AppTheme.Colors.primary)
         }
+        .accessibilityLabel("筛选")
+        .accessibilityHint(isFilterExpanded ? "收起筛选选项" : "展开筛选选项")
     }
     
     // MARK: - Helper Methods

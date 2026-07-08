@@ -55,13 +55,11 @@ class AppRankModel: ObservableObject {
                     case .unsatisfied:
                         // 网络连接断开
                         self?.isShowAlert = true
-                        self?.alertMsg = "Network unconnected."
-                        print("network unsatisfied.")
+                        self?.alertMsg = "网络未连接，请检查网络设置"
                     case .requiresConnection:
                         // 网络需要连接
                         self?.isShowAlert = true
-                        self?.alertMsg = "Network require connection."
-                        print("network require connection.")
+                        self?.alertMsg = "网络需要连接"
                     @unknown default:
                         break
                     }
@@ -148,19 +146,25 @@ class AppRankModel: ObservableObject {
         }
         let dateStr = String(dateString[..<index]) + "-0800"
         
-        // 创建日期格式化器解析API时间格式
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
-        
-        if let date = dateFormatter.date(from: dateStr) {
-            // 转换为用户友好的时间格式
-            let dateformat = DateFormatter()
-            dateformat.dateFormat = "yyyy-MM-dd HH:mm:ss"
-            self.rankUpdated = dateformat.string(from: date)
+        if let date = Self.isoFormatter.date(from: dateStr) {
+            self.rankUpdated = Self.displayFormatter.string(from: date)
         } else {
-            // 解析失败时使用原始字符串
             self.rankUpdated = dateString
         }
     }
+    
+    /// 缓存的 ISO 日期格式化器
+    private static let isoFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
+        return formatter
+    }()
+    
+    /// 缓存的显示日期格式化器
+    private static let displayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        return formatter
+    }()
     
 }
