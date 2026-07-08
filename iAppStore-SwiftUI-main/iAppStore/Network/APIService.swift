@@ -26,10 +26,36 @@ public struct APIService: Sendable {
     let decoder = JSONDecoder()
     
     /// API请求错误类型
-    public enum APIError: Error, Sendable {
+    public enum APIError: Error, Sendable, LocalizedError {
+        case invalidURL
         case noResponse
+        case statusCode(Int)
         case jsonDecodingError(error: Error)
         case networkError(error: Error)
+        case timeout
+        case emptyData
+        case unauthorized
+        
+        public var errorDescription: String? {
+            switch self {
+            case .invalidURL:
+                return "无效的URL地址"
+            case .noResponse:
+                return "服务器未响应"
+            case .statusCode(let code):
+                return "服务器返回错误状态码: \(code)"
+            case .jsonDecodingError:
+                return "数据解析失败"
+            case .networkError(let error):
+                return "网络请求失败: \(error.localizedDescription)"
+            case .timeout:
+                return "请求超时，请稍后重试"
+            case .emptyData:
+                return "服务器返回空数据"
+            case .unauthorized:
+                return "未授权访问"
+            }
+        }
     }
     
     /// API端点枚举
@@ -86,9 +112,9 @@ public struct APIService: Sendable {
     
     /// 使用 async/await 发送请求
     public func request<T: Codable & Sendable>(endpoint: Endpoint, params: [String: String]? = nil) async -> Result<T, APIError> {
-        guard let url = URL(string: endpoint.url()),
-              var components = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
-            return .failure(.noResponse)
+        guard let baseURL = URL(string: endpoint.url()),
+              var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: true) else {
+            return .failure(.invalidURL)
         }
         
         if let params = params {
@@ -97,7 +123,7 @@ public struct APIService: Sendable {
             }
         }
         
-        guard let requestURL = components.url else { return .failure(.noResponse) }
+        guard let requestURL = components.url else { return .failure(.invalidURL) }
         
         #if DEBUG
         debugPrint(requestURL)
@@ -108,87 +134,33 @@ public struct APIService: Sendable {
         
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
-            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
                 return .failure(.noResponse)
             }
+            
+            guard (200...299).contains(httpResponse.statusCode) else {
+                if httpResponse.statusCode == 401 {
+                    return .failure(.unauthorized)
+                }
+                return .failure(.statusCode(httpResponse.statusCode))
+            }
+            
+            guard !data.isEmpty else {
+                return .failure(.emptyData)
+            }
+            
             let object = try decoder.decode(T.self, from: data)
             return .success(object)
         } catch let error as DecodingError {
             return .failure(.jsonDecodingError(error: error))
+        } catch let error as URLError {
+            if error.code == .timedOut {
+                return .failure(.timeout)
+            }
+            return .failure(.networkError(error: error))
         } catch {
             return .failure(.networkError(error: error))
         }
-    }
-    
-    // MARK: - Legacy Methods (Deprecated)
-    
-    @available(*, deprecated, message: "Use async request() instead")
-    public func POST<T: Codable & Sendable>(endpoint: Endpoint, params: [String: String]?,
-                         completionHandler: @escaping @Sendable (Result<T, APIError>) -> Void) {
-        guard let url = URL(string: endpoint.url()),
-              var components = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
-            completionHandler(.failure(.noResponse)); return
-        }
-        
-        if let params = params {
-            for (_, value) in params.enumerated() {
-                components.queryItems?.append(URLQueryItem(name: value.key, value: value.value))
-            }
-        }
-        guard let requestURL = components.url else { completionHandler(.failure(.noResponse)); return }
-        
-        var request = URLRequest(url: requestURL, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 60.0)
-        request.httpMethod = "POST"
-        
-        URLSession.shared.dataTask(with: request) { (data, response, error) in
-            guard let data = data else { DispatchQueue.main.async { completionHandler(.failure(.noResponse)) }; return }
-            guard error == nil else { DispatchQueue.main.async { completionHandler(.failure(.networkError(error: error!))) }; return }
-            guard let response = response as? HTTPURLResponse, response.statusCode == 200 else {
-                DispatchQueue.main.async { completionHandler(.failure(.noResponse)) }; return
-            }
-            do {
-                let object = try self.decoder.decode(T.self, from: data)
-                DispatchQueue.main.async { completionHandler(.success(object)) }
-            } catch let error {
-                DispatchQueue.main.async { completionHandler(.failure(.jsonDecodingError(error: error))) }
-            }
-        }.resume()
-    }
-    
-    @available(*, deprecated, message: "Use async request() instead")
-    public func GET_JSON(endpoint: Endpoint, params: [String: String]?,
-                    completionHandler: @escaping @Sendable (Result<Dictionary<String, Any>, APIError>) -> Void) {
-        guard let url = URL(string: endpoint.url()),
-              var components = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
-            completionHandler(.failure(.noResponse)); return
-        }
-        
-        if let params = params {
-            for (_, value) in params.enumerated() {
-                components.queryItems?.append(URLQueryItem(name: value.key, value: value.value))
-            }
-        }
-        guard let requestURL = components.url else { completionHandler(.failure(.noResponse)); return }
-        
-        var request = URLRequest(url: requestURL)
-        request.httpMethod = "GET"
-        
-        URLSession.shared.dataTask(with: request) { (data, response, error) in
-            guard let data = data else { DispatchQueue.main.async { completionHandler(.failure(.noResponse)) }; return }
-            guard error == nil else { DispatchQueue.main.async { completionHandler(.failure(.networkError(error: error!))) }; return }
-            guard let response = response as? HTTPURLResponse, response.statusCode == 200 else {
-                DispatchQueue.main.async { completionHandler(.failure(.noResponse)) }; return
-            }
-            do {
-                let json = try JSONSerialization.jsonObject(with: data, options: .mutableContainers)
-                guard let object = json as? Dictionary<String, Any> else {
-                    let error = NSError(domain: "APIService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid JSON format"])
-                    DispatchQueue.main.async { completionHandler(.failure(.jsonDecodingError(error: error))) }; return
-                }
-                DispatchQueue.main.async { completionHandler(.success(object)) }
-            } catch let error {
-                DispatchQueue.main.async { completionHandler(.failure(.jsonDecodingError(error: error))) }
-            }
-        }.resume()
     }
 }

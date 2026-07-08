@@ -67,7 +67,7 @@ struct SearchHome: View {
             if searchText.isEmpty {
                 searchSuggestionsView
             } else if appModel.isLoading {
-                EnhancedLoadingView(message: "正在搜索").frame(maxHeight: .infinity)
+                searchSkeletonView
             } else if appModel.results.isEmpty {
                 EmptyStateView(type: .noSearchResults)
             } else {
@@ -172,6 +172,19 @@ struct SearchHome: View {
             }
             .padding(.horizontal, AppTheme.Spacing.default)
         }
+    }
+    
+    // MARK: - Search Skeleton View
+    private var searchSkeletonView: some View {
+        List {
+            ForEach(0..<5, id: \.self) { _ in
+                SkeletonRow(showRank: false)
+                    .listRowInsets(EdgeInsets(top: AppTheme.Spacing.sm, leading: AppTheme.Spacing.default,
+                                              bottom: AppTheme.Spacing.sm, trailing: AppTheme.Spacing.default))
+                    .listRowBackground(AppTheme.Colors.Background.primary)
+            }
+        }
+        .listStyle(.plain)
     }
     
     // MARK: - Search Results List

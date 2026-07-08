@@ -100,6 +100,7 @@ enum AppTab: String, CaseIterable, Sendable {
     case today = "Today"
     case games = "游戏"
     case apps = "App"
+    case favorites = "收藏"
     case search = "搜索"
     case subscription = "订阅"
     
@@ -109,6 +110,7 @@ enum AppTab: String, CaseIterable, Sendable {
         case .today: return "doc.text.image"
         case .games: return "gamecontroller"
         case .apps: return "square.stack.3d.up"
+        case .favorites: return "heart"
         case .search: return "magnifyingglass"
         case .subscription: return "bell"
         }
@@ -120,6 +122,7 @@ enum AppTab: String, CaseIterable, Sendable {
         case .today: return "doc.text.image.fill"
         case .games: return "gamecontroller.fill"
         case .apps: return "square.stack.3d.up.fill"
+        case .favorites: return "heart.fill"
         case .search: return "sparkle.magnifyingglass"
         case .subscription: return "bell.badge.fill"
         }
@@ -135,6 +138,8 @@ enum AppTab: String, CaseIterable, Sendable {
             GamesTabView()
         case .apps:
             AppsTabView()
+        case .favorites:
+            FavoritesTabView()
         case .search:
             SearchTabView()
         case .subscription:
@@ -195,6 +200,13 @@ struct SearchTabView: View {
 struct SubscriptionTabView: View {
     var body: some View {
         SubscriptionHome()
+    }
+}
+
+/// 收藏页面视图
+struct FavoritesTabView: View {
+    var body: some View {
+        FavoritesHome()
     }
 }
 

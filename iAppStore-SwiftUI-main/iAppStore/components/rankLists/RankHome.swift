@@ -50,13 +50,26 @@ struct RankHome: View {
     @ViewBuilder
     private var mainContent: some View {
         if appRankModel.isLoading && appRankModel.results.isEmpty {
-            EnhancedLoadingView(message: "正在获取排行榜")
+            skeletonListView
         } else if appRankModel.results.isEmpty {
             EmptyStateView(type: .noData) {
                 appRankModel.fetchRankData(rankName, categoryName, regionName)
             }
         } else {
             rankListView
+        }
+    }
+    
+    // MARK: - Skeleton List View
+    private var skeletonListView: some View {
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                headerSection
+                if isFilterExpanded {
+                    filterSection
+                }
+                SkeletonList(count: 5)
+            }
         }
     }
     

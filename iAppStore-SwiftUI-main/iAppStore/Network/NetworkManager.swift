@@ -7,67 +7,94 @@
 //
 
 import Foundation
-import Combine
 
-/// 基于Combine框架的网络管理器
-/// 提供响应式的网络请求功能，主要用于图片下载等场景
-class NetworkingManager {
-   
+/// 网络管理器
+/// 提供基于 Async/Await 的网络请求功能，主要用于图片下载等场景
+actor NetworkingManager {
+    
+    static let shared = NetworkingManager()
+    
+    private init() {}
+    
     /// 网络请求错误类型定义
-    enum NetworkingError: LocalizedError {
-        /// URL响应错误，包含出错的URL
-        case badURLResponse(url: URL)
-        /// 未知错误
+    enum NetworkingError: LocalizedError, Sendable {
+        case badURLResponse(url: URL, statusCode: Int)
+        case invalidURL
+        case timeout
+        case emptyData
+        case networkUnavailable
+        case cancelled
         case unknown
         
-        /// 错误描述信息
         var errorDescription: String? {
             switch self {
-            case .badURLResponse(url: let url): 
-                return "[🔥] Bad response from URL: \(url)"
-            case .unknown: 
-                return "[⚠️] Unknown error occured"
+            case .badURLResponse(url: let url, statusCode: let code):
+                return "[🔥] Bad response from URL: \(url) (status: \(code))"
+            case .invalidURL:
+                return "[⚠️] Invalid URL"
+            case .timeout:
+                return "[⏱️] Request timed out"
+            case .emptyData:
+                return "[📭] Empty data received"
+            case .networkUnavailable:
+                return "[📶] Network unavailable"
+            case .cancelled:
+                return "[✋] Request cancelled"
+            case .unknown:
+                return "[⚠️] Unknown error occurred"
             }
         }
     }
     
-    /// 下载数据的静态方法，返回Combine Publisher
+    /// 下载数据的方法
     /// - Parameter url: 要下载的URL
-    /// - Returns: 返回AnyPublisher，成功时包含Data，失败时包含Error
-    /// - Note: 自动重试2次，适用于图片等资源的下载
-    static func download(url: URL) -> AnyPublisher<Data, Error> {
-        return URLSession.shared.dataTaskPublisher(for: url)
-            .tryMap({ try handleURLResponse(output: $0, url: url) })
-            .retry(2) // 失败时自动重试2次
-            .eraseToAnyPublisher()
+    /// - Returns: 返回下载的数据
+    /// - Throws: 下载失败时抛出NetworkingError
+    func download(url: URL, maxRetries: Int = 2) async throws -> Data {
+        for attempt in 0...maxRetries {
+            do {
+                return try await downloadOnce(url: url)
+            } catch {
+                if attempt < maxRetries {
+                    try await Task.sleep(nanoseconds: UInt64(pow(2, Double(attempt)) * 100_000_000))
+                    continue
+                }
+                throw error
+            }
+        }
+        throw NetworkingError.unknown
     }
     
-    /// 处理URL响应的静态方法
-    /// - Parameters:
-    ///   - output: URLSession数据任务的输出
-    ///   - url: 请求的URL，用于错误信息
-    /// - Returns: 成功时返回响应数据
-    /// - Throws: 当HTTP状态码不在200-299范围内时抛出NetworkingError.badURLResponse
-    static func handleURLResponse(output: URLSession.DataTaskPublisher.Output, url: URL) throws -> Data {
-        // 检查HTTP响应状态码是否在成功范围内（200-299）
-        guard let response = output.response as? HTTPURLResponse,
-              response.statusCode >= 200 && response.statusCode < 300 else {
-                  throw NetworkingError.badURLResponse(url: url)
-              }
-        return output.data
-    }
-    
-    /// 处理Combine完成事件的静态方法
-    /// - Parameter completion: Combine的完成事件
-    /// - Note: 用于统一处理网络请求的完成状态，包括成功和失败
-    static func handleCompletion(completion: Subscribers.Completion<Error>) {
-        switch completion {
-        case .finished:
-            // 请求成功完成，无需特殊处理
-            break
-        case .failure(let error):
-            // 请求失败，打印错误信息
-            print(error.localizedDescription)
+    private func downloadOnce(url: URL) async throws -> Data {
+        do {
+            let (data, response) = try await URLSession.shared.data(from: url)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw NetworkingError.unknown
+            }
+            
+            guard httpResponse.statusCode >= 200 && httpResponse.statusCode < 300 else {
+                throw NetworkingError.badURLResponse(url: url, statusCode: httpResponse.statusCode)
+            }
+            
+            guard !data.isEmpty else {
+                throw NetworkingError.emptyData
+            }
+            
+            return data
+        } catch let error as URLError {
+            switch error.code {
+            case .timedOut:
+                throw NetworkingError.timeout
+            case .notConnectedToInternet, .networkConnectionLost:
+                throw NetworkingError.networkUnavailable
+            case .cancelled:
+                throw NetworkingError.cancelled
+            default:
+                throw error
+            }
+        } catch {
+            throw error
         }
     }
 }
