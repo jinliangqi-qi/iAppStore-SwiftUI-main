@@ -32,8 +32,8 @@ struct RankHome: View {
                 AppTheme.Colors.Background.grouped.ignoresSafeArea()
                 mainContent
             }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .principal) { EmptyView() } }
+            .navigationTitle(tabType.navigationTitle)
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) { filterButton }
             }
@@ -79,16 +79,6 @@ struct RankHome: View {
     // MARK: - Header Section
     private var headerSection: some View {
         VStack(spacing: AppTheme.Spacing.md) {
-            // 大标题
-            HStack {
-                Text(tabType.navigationTitle)
-                    .font(.system(size: 34, weight: .bold))
-                    .foregroundStyle(AppTheme.Colors.Text.primary)
-                Spacer()
-            }
-            .padding(.horizontal, AppTheme.Spacing.default)
-            .padding(.top, AppTheme.Spacing.sm)
-            
             // 时间和地区信息
             HStack {
                 Image(systemName: "clock").font(.caption).foregroundStyle(.tertiary)
@@ -101,7 +91,7 @@ struct RankHome: View {
             .padding(.horizontal, AppTheme.Spacing.default)
             filterTagsView
         }
-        .padding(.top, AppTheme.Spacing.md).padding(.bottom, AppTheme.Spacing.sm)
+        .padding(.top, AppTheme.Spacing.sm).padding(.bottom, AppTheme.Spacing.sm)
         .background(AppTheme.Colors.Background.primary)
     }
     

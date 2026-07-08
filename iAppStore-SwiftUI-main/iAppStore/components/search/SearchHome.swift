@@ -94,7 +94,7 @@ struct SearchHome: View {
                 }
             }
             .padding(.horizontal, AppTheme.Spacing.md).padding(.vertical, AppTheme.Spacing.sm)
-            .background(Color(.systemGray6)).clipShape(RoundedRectangle(cornerRadius: AppTheme.CornerRadius.small))
+            .background(AppTheme.Colors.Background.gray6).clipShape(RoundedRectangle(cornerRadius: AppTheme.CornerRadius.small))
             
             if isSearchFocused || !searchText.isEmpty {
                 Button("取消") {

@@ -41,7 +41,7 @@ struct FilterTag: View {
             .background(
                 isSelected
                     ? AnyShapeStyle(AppTheme.Colors.primary)
-                    : AnyShapeStyle(Color(.systemGray6))
+                    : AnyShapeStyle(AppTheme.Colors.Background.gray6)
             )
             .clipShape(Capsule())
         }
@@ -139,7 +139,7 @@ struct ModernRankCell: View {
                     .foregroundStyle(AppTheme.Colors.Text.secondary)
                     .padding(.horizontal, AppTheme.Spacing.sm)
                     .padding(.vertical, AppTheme.Spacing.xs)
-                    .background(Color(.systemGray6))
+                    .background(AppTheme.Colors.Background.gray6)
                     .clipShape(Capsule())
                 
                 // 价格
@@ -155,24 +155,14 @@ struct ModernRankCell: View {
     
     /// 获取按钮
     private var getButton: some View {
-        Button {
+        AnimatedButton(
+            title: item.imPrice.attributes.amount == "0.00" ? "获取" : "购买",
+            style: item.imPrice.attributes.amount == "0.00" ? .get : .purchase
+        ) {
             if let url = URL(string: item.id.label) {
                 openURL(url)
             }
-            #if os(iOS)
-            let generator = UIImpactFeedbackGenerator(style: .light)
-            generator.impactOccurred()
-            #endif
-        } label: {
-            Text(item.imPrice.attributes.amount == "0.00" ? "获取" : "购买")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(.white)
-                .padding(.horizontal, 18)
-                .padding(.vertical, 8)
-                .background(AppTheme.Colors.primary)
-                .clipShape(Capsule())
         }
-        .buttonStyle(PlainButtonStyle())
     }
 }
 

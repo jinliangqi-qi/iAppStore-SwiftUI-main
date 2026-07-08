@@ -64,7 +64,7 @@ struct FilterChip: View {
             .foregroundStyle(isSelected ? .white : AppTheme.Colors.Text.primary)
             .padding(.horizontal, AppTheme.Spacing.md)
             .padding(.vertical, AppTheme.Spacing.sm)
-            .background(isSelected ? AppTheme.Colors.primary : Color(.systemGray6))
+            .background(isSelected ? AppTheme.Colors.primary : AppTheme.Colors.Background.gray6)
             .clipShape(Capsule())
         }
         .buttonStyle(PlainButtonStyle())
@@ -248,7 +248,7 @@ struct SubscribeTypeCard: View {
             .padding(.vertical, AppTheme.Spacing.md)
             .background(
                 RoundedRectangle(cornerRadius: AppTheme.CornerRadius.small)
-                    .fill(isSelected ? color.opacity(0.1) : Color(.systemGray6))
+                    .fill(isSelected ? color.opacity(0.1) : AppTheme.Colors.Background.gray6)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: AppTheme.CornerRadius.small)

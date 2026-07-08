@@ -40,6 +40,16 @@ enum AppTheme {
             static let tertiary = Color(uiColor: .tertiarySystemBackground)
             static let grouped = Color(uiColor: .systemGroupedBackground)
             static let groupedSecondary = Color(uiColor: .secondarySystemGroupedBackground)
+            static let fill = Color(uiColor: .systemFill)
+            static let secondaryFill = Color(uiColor: .secondarySystemFill)
+            static let tertiaryFill = Color(uiColor: .tertiarySystemFill)
+            static let quaternaryFill = Color(uiColor: .quaternarySystemFill)
+            static let gray = Color(uiColor: .systemGray)
+            static let gray2 = Color(uiColor: .systemGray2)
+            static let gray3 = Color(uiColor: .systemGray3)
+            static let gray4 = Color(uiColor: .systemGray4)
+            static let gray5 = Color(uiColor: .systemGray5)
+            static let gray6 = Color(uiColor: .systemGray6)
         }
         
         /// 文字色

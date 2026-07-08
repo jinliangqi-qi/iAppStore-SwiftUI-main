@@ -106,7 +106,7 @@ struct SubscriptionAddView: View {
                     Image(systemName: isRegionPickerExpanded ? "chevron.up" : "chevron.down")
                         .font(.caption).foregroundStyle(AppTheme.Colors.Text.tertiary)
                 }
-                .padding(AppTheme.Spacing.md).background(Color(.systemGray6))
+                .padding(AppTheme.Spacing.md).background(AppTheme.Colors.Background.gray6)
                 .clipShape(RoundedRectangle(cornerRadius: AppTheme.CornerRadius.small))
             }
             .buttonStyle(PlainButtonStyle())
@@ -138,7 +138,7 @@ struct SubscriptionAddView: View {
                 }
             }
         }
-        .frame(maxHeight: 250).background(Color(.systemGray6))
+        .frame(maxHeight: 250).background(AppTheme.Colors.Background.gray6)
         .clipShape(RoundedRectangle(cornerRadius: AppTheme.CornerRadius.small))
     }
     
@@ -150,7 +150,7 @@ struct SubscriptionAddView: View {
             HStack(spacing: AppTheme.Spacing.sm) {
                 TextField(subscribeType == 1 ? "请输入新 App 的 ID" : "请输入 App ID 进行搜索", text: $appleIdText)
                     .font(AppTheme.Typography.body).keyboardType(.numberPad).focused($isTextFieldFocused)
-                    .padding(AppTheme.Spacing.md).background(Color(.systemGray6))
+                    .padding(AppTheme.Spacing.md).background(AppTheme.Colors.Background.gray6)
                     .clipShape(RoundedRectangle(cornerRadius: AppTheme.CornerRadius.small))
                     .onSubmit { performSearch() }
                 if subscribeType != 1 {
@@ -192,7 +192,7 @@ struct SubscriptionAddView: View {
                     }
                     Spacer()
                 }
-                .padding(AppTheme.Spacing.md).background(Color(.systemGray6))
+                .padding(AppTheme.Spacing.md).background(AppTheme.Colors.Background.gray6)
                 .clipShape(RoundedRectangle(cornerRadius: AppTheme.CornerRadius.small))
             }
             Text("请确认此 App 是您要订阅的应用").font(AppTheme.Typography.caption1)

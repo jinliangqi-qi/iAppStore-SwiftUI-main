@@ -58,7 +58,7 @@ struct AppDetailScreenShowView: View {
                         Spacer()
                     }
                 }
-                .background(Color.tsmg_systemBackground)
+                .background(AppTheme.Colors.Background.primary)
                 .padding([.leading, .trailing], 12)
                 .padding([.top, .bottom], 10)
                 .onTapGesture {
@@ -219,9 +219,9 @@ struct MoreParagraphView: View {
                 }
                 .font(.subheadline)
                 .foregroundColor(Color.blue)
-                .background(Color.tsmg_systemBackground)
+                .background(AppTheme.Colors.Background.primary)
                 .offset(x: 5, y: 0)
-                .shadow(color: .tsmg_systemBackground.opacity(0.9), radius: 3, x: -12)
+                .shadow(color: AppTheme.Colors.Background.primary.opacity(0.9), radius: 3, x: -12)
             }
         }
     }
@@ -266,7 +266,7 @@ struct AppDetailFooterCellView: View {
                         Text(description).font(.subheadline)
                         Image(systemName: "chevron.down").foregroundColor(.gray).font(.body)
                     }
-                    .background(Color.tsmg_systemBackground)
+                    .background(AppTheme.Colors.Background.primary)
                     .onTapGesture { isShowExtendText = true }
                 }
             }

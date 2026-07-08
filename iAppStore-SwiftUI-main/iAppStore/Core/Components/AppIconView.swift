@@ -75,7 +75,7 @@ struct AppIconView: View {
         RoundedRectangle(cornerRadius: calculatedCornerRadius, style: .continuous)
             .fill(
                 LinearGradient(
-                    colors: [Color(.systemGray5), Color(.systemGray6)],
+                    colors: [AppTheme.Colors.Background.gray5, AppTheme.Colors.Background.gray6],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
@@ -91,7 +91,7 @@ struct AppIconView: View {
     /// 加载失败占位视图
     private var errorPlaceholderView: some View {
         RoundedRectangle(cornerRadius: calculatedCornerRadius, style: .continuous)
-            .fill(Color(.systemGray5))
+            .fill(AppTheme.Colors.Background.gray5)
             .overlay(
                 Image(systemName: "photo")
                     .font(.system(size: size * 0.3))

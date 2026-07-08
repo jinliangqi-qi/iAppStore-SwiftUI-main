@@ -37,7 +37,7 @@ struct SearchTag: View {
             }
             .padding(.horizontal, AppTheme.Spacing.md)
             .padding(.vertical, AppTheme.Spacing.sm)
-            .background(Color(.systemGray6))
+            .background(AppTheme.Colors.Background.gray6)
             .clipShape(Capsule())
         }
         .buttonStyle(PlainButtonStyle())
@@ -136,24 +136,14 @@ struct SearchResultCell: View {
     
     /// 获取按钮
     private var getButton: some View {
-        Button {
+        AnimatedButton(
+            title: (item.price ?? 0) == 0 ? "获取" : item.formattedPrice ?? "",
+            style: (item.price ?? 0) == 0 ? .get : .purchase
+        ) {
             if let url = URL(string: item.trackViewUrl) {
                 openURL(url)
             }
-        } label: {
-            Text((item.price ?? 0) == 0 ? "获取" : item.formattedPrice ?? "")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle((item.price ?? 0) == 0 ? .white : AppTheme.Colors.primary)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(
-                    (item.price ?? 0) == 0
-                        ? AnyShapeStyle(AppTheme.Colors.primary)
-                        : AnyShapeStyle(AppTheme.Colors.primary.opacity(0.12))
-                )
-                .clipShape(Capsule())
         }
-        .buttonStyle(PlainButtonStyle())
     }
 }
 

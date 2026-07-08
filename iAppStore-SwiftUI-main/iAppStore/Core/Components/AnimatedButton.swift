@@ -200,7 +200,7 @@ struct AnimatedButton: View {
             .font(.system(size: 20, weight: .medium))
             .foregroundStyle(isDisabled ? .gray : AppTheme.Colors.primary)
             .frame(width: 44, height: 44)
-            .background(Color(.systemGray6))
+            .background(AppTheme.Colors.Background.gray6)
             .clipShape(Circle())
     }
     

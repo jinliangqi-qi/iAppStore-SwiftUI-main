@@ -60,12 +60,12 @@ struct AppDetailView: View {
             VStack(alignment: .leading, spacing: AppTheme.Spacing.default) {
                 HStack(alignment: .top, spacing: AppTheme.Spacing.default) {
                     RoundedRectangle(cornerRadius: AppTheme.CornerRadius.appIcon)
-                        .fill(Color(.systemGray5)).frame(width: 120, height: 120).shimmer()
+                        .fill(AppTheme.Colors.Background.gray5).frame(width: 120, height: 120).shimmer()
                     VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-                        RoundedRectangle(cornerRadius: 4).fill(Color(.systemGray5)).frame(height: 24).shimmer()
-                        RoundedRectangle(cornerRadius: 4).fill(Color(.systemGray5)).frame(width: 120, height: 16).shimmer()
+                        RoundedRectangle(cornerRadius: 4).fill(AppTheme.Colors.Background.gray5).frame(height: 24).shimmer()
+                        RoundedRectangle(cornerRadius: 4).fill(AppTheme.Colors.Background.gray5).frame(width: 120, height: 16).shimmer()
                         Spacer()
-                        RoundedRectangle(cornerRadius: 20).fill(Color(.systemGray5)).frame(height: 44).shimmer()
+                        RoundedRectangle(cornerRadius: 20).fill(AppTheme.Colors.Background.gray5).frame(height: 44).shimmer()
                     }
                 }
                 .padding(AppTheme.Spacing.lg)

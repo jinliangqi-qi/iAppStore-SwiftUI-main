@@ -107,10 +107,10 @@ enum AppTab: String, CaseIterable, Sendable {
     var icon: String {
         switch self {
         case .today: return "doc.text.image"
-        case .games: return "gamecontroller.fill"
-        case .apps: return "square.stack.3d.up.fill"
+        case .games: return "gamecontroller"
+        case .apps: return "square.stack.3d.up"
         case .search: return "magnifyingglass"
-        case .subscription: return "bell.badge"
+        case .subscription: return "bell"
         }
     }
     
@@ -120,7 +120,7 @@ enum AppTab: String, CaseIterable, Sendable {
         case .today: return "doc.text.image.fill"
         case .games: return "gamecontroller.fill"
         case .apps: return "square.stack.3d.up.fill"
-        case .search: return "magnifyingglass.circle.fill"
+        case .search: return "sparkle.magnifyingglass"
         case .subscription: return "bell.badge.fill"
         }
     }
