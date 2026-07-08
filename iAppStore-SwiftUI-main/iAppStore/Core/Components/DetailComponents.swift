@@ -83,7 +83,7 @@ struct ScreenshotCard: View {
                     .aspectRatio(contentMode: .fit)
             } placeholder: {
                 RoundedRectangle(cornerRadius: AppTheme.CornerRadius.medium)
-                    .fill(Color(.systemGray5))
+                    .fill(AppTheme.Colors.Background.gray5)
                     .shimmer()
             }
             .frame(width: 220, height: 390)

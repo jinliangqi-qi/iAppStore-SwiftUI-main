@@ -58,7 +58,7 @@ struct AppDetailScreenShowView: View {
                         Spacer()
                     }
                 }
-                .background(Color.tsmg_systemBackground)
+                .background(AppTheme.Colors.Background.primary)
                 .padding([.leading, .trailing], 12)
                 .padding([.top, .bottom], 10)
                 .onTapGesture {
@@ -90,9 +90,14 @@ struct AppDetailScreenShowView: View {
 /// 单个截图滚动视图
 struct AppDetailScreenShotView: View {
     var screenshotUrls: [String]?
-    var imageSize: CGSize?
+    var imageSize: Size?
     @State private var selectedShot: Bool = false
     @State private var selectedImgUrl: String?
+    
+    private var cgImageSize: CGSize? {
+        guard let size = imageSize else { return nil }
+        return CGSize(width: size.width, height: size.height)
+    }
     
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -111,7 +116,7 @@ struct AppDetailScreenShotView: View {
                                         .resizable()
                                         .scaledToFit()
                                         .cornerRadius(11)
-                                        .frame(width: imageSize?.width)
+                                        .frame(width: cgImageSize?.width)
                                 },
                                 image: {
                                     $0.resizable()
@@ -119,8 +124,8 @@ struct AppDetailScreenShotView: View {
                                         .cornerRadius(11)
                                         .overlay(RoundedRectangle(cornerRadius: 11)
                                             .stroke(Color.gray, lineWidth: 0.1)
-                                            .frame(width: imageSize?.width, height: imageSize?.height))
-                                        .frame(width: imageSize?.width, height: imageSize?.height)
+                                            .frame(width: cgImageSize?.width, height: cgImageSize?.height))
+                                        .frame(width: cgImageSize?.width, height: cgImageSize?.height)
                                 }
                             )
                         }
@@ -214,9 +219,9 @@ struct MoreParagraphView: View {
                 }
                 .font(.subheadline)
                 .foregroundColor(Color.blue)
-                .background(Color.tsmg_systemBackground)
+                .background(AppTheme.Colors.Background.primary)
                 .offset(x: 5, y: 0)
-                .shadow(color: .tsmg_systemBackground.opacity(0.9), radius: 3, x: -12)
+                .shadow(color: AppTheme.Colors.Background.primary.opacity(0.9), radius: 3, x: -12)
             }
         }
     }
@@ -261,7 +266,7 @@ struct AppDetailFooterCellView: View {
                         Text(description).font(.subheadline)
                         Image(systemName: "chevron.down").foregroundColor(.gray).font(.body)
                     }
-                    .background(Color.tsmg_systemBackground)
+                    .background(AppTheme.Colors.Background.primary)
                     .onTapGesture { isShowExtendText = true }
                 }
             }

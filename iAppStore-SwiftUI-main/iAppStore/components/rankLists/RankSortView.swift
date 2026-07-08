@@ -70,7 +70,7 @@ extension RankSortView {
                 regionContent
             }
         }
-        .background(Color.tsmg_systemBackground)
+        .background(AppTheme.Colors.Background.primary)
         .frame(maxHeight: 210)
     }
     
@@ -111,7 +111,7 @@ extension RankSortView {
                 checkmarkImage
             }
         }
-        .background(Color.tsmg_systemBackground)
+        .background(AppTheme.Colors.Background.primary)
         .onTapGesture {
             onTapSortItem(index: index)
         }

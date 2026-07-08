@@ -19,7 +19,6 @@ final class NetworkStateChecker: ObservableObject {
     
     private let monitor: NWPathMonitor
     private let subject: CurrentValueSubject<NWPath, Never>
-    private var subscriber: AnyCancellable?
     private let queue = DispatchQueue(label: "Monitor")
     
     init() {

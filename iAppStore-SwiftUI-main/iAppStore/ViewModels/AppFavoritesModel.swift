@@ -2,9 +2,14 @@
 //  AppFavoritesModel.swift
 //  iAppStore
 //
+//  App收藏管理器
+//  负责管理用户收藏的App列表，使用UserDefaults进行本地存储
+//  兼容 iOS 15+ / macOS 12+ / iPadOS / Swift 6
+//
 //  Created by iHTCboy on 2023/6/24.
 //  Copyright © 2023 37 Mobile Games. All rights reserved.
 //
+
 
 import Foundation
 
@@ -15,6 +20,15 @@ class AppFavoritesModel: ObservableObject {
     
     /// 单例实例
     public static let shared = AppFavoritesModel()
+    
+    /// 收藏的App详情列表
+    @Published var favorites: [AppDetail] = []
+    
+    /// 是否正在加载
+    @Published var isLoading = false
+    
+    /// 错误消息
+    @Published var errorMessage: String?
     
     /// 搜索指定App是否已收藏
     /// - Parameter appId: App ID
@@ -30,10 +44,8 @@ class AppFavoritesModel: ObservableObject {
     func add(_ app: AppFavorite) {
         var favorites = appFavorites()
         if let index = favorites.firstIndex(where: { $0.appId == app.appId }) {
-            // 更新已存在的收藏记录
             favorites[index] = app
         } else {
-            // 添加新的收藏记录
             favorites.append(app)
         }
         saveFavorites(favorites)
@@ -53,7 +65,7 @@ class AppFavoritesModel: ObservableObject {
         return -1
     }
 
-    /// 获取所有收藏的App列表
+    /// 获取所有收藏的App列表（仅ID和地区）
     /// 从UserDefaults中读取并解码收藏数据
     /// - Returns: 收藏的App列表
     func appFavorites() -> [AppFavorite] {
@@ -74,5 +86,44 @@ class AppFavoritesModel: ObservableObject {
         if let encodedData = try? JSONEncoder().encode(favorites) {
             userDefaults.set(encodedData, forKey: "AppFavorites")
         }
+    }
+    
+    /// 获取所有收藏App的详细信息
+    /// 从网络获取每个收藏App的详情数据
+    func fetchFavoritesDetails() async {
+        isLoading = true
+        errorMessage = nil
+        favorites = []
+        
+        let favoriteIds = appFavorites()
+        if favoriteIds.isEmpty {
+            isLoading = false
+            return
+        }
+        
+        var details: [AppDetail] = []
+        
+        for favorite in favoriteIds {
+            let regionId = TSMGConstants.regionTypeListIds[favorite.regionName] ?? "cn"
+            let result: Result<AppDetailM, APIService.APIError> = await APIService.shared.request(
+                endpoint: .lookupApp(appid: favorite.appId, country: regionId)
+            )
+            
+            if case .success(let response) = result {
+                if let appDetail = response.results.first {
+                    details.append(appDetail)
+                }
+            }
+        }
+        
+        favorites = details
+        isLoading = false
+    }
+    
+    /// 检查App是否已收藏
+    /// - Parameter appId: App ID
+    /// - Returns: 是否已收藏
+    func isFavorite(appId: String) -> Bool {
+        return search(appId) != nil
     }
 }

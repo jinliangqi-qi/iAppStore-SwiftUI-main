@@ -40,23 +40,15 @@ struct AppIconView: View {
     // MARK: - Body
     
     var body: some View {
-        AsyncImage(url: URL(string: url ?? "")) { phase in
-            switch phase {
-            case .empty:
-                placeholderView
-                    .transition(.opacity)
-            case .success(let image):
+        AsyncImageLoader(
+            url: URL(string: url ?? ""),
+            placeholder: { placeholderView },
+            image: { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
-            case .failure:
-                errorPlaceholderView
-                    .transition(.opacity)
-            @unknown default:
-                placeholderView
             }
-        }
+        )
         .frame(width: size, height: size)
         .clipShape(RoundedRectangle(cornerRadius: calculatedCornerRadius, style: .continuous))
         .overlay(
@@ -66,6 +58,8 @@ struct AppIconView: View {
         .if(showShadow) { view in
             view.lightShadow()
         }
+        .accessibilityLabel("应用图标")
+        .accessibilityHidden(url == nil)
     }
     
     // MARK: - Placeholder Views
@@ -75,7 +69,7 @@ struct AppIconView: View {
         RoundedRectangle(cornerRadius: calculatedCornerRadius, style: .continuous)
             .fill(
                 LinearGradient(
-                    colors: [Color(.systemGray5), Color(.systemGray6)],
+                    colors: [AppTheme.Colors.Background.gray5, AppTheme.Colors.Background.gray6],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
@@ -91,7 +85,7 @@ struct AppIconView: View {
     /// 加载失败占位视图
     private var errorPlaceholderView: some View {
         RoundedRectangle(cornerRadius: calculatedCornerRadius, style: .continuous)
-            .fill(Color(.systemGray5))
+            .fill(AppTheme.Colors.Background.gray5)
             .overlay(
                 Image(systemName: "photo")
                     .font(.system(size: size * 0.3))
@@ -100,46 +94,8 @@ struct AppIconView: View {
     }
 }
 
-// MARK: - Shimmer Effect
-/// 闪光效果修饰器（加载动画）
-struct ShimmerModifier: ViewModifier {
-    @State private var isAnimating = false
-    
-    func body(content: Content) -> some View {
-        content
-            .overlay(
-                GeometryReader { geometry in
-                    LinearGradient(
-                        colors: [
-                            Color.clear,
-                            Color.white.opacity(0.4),
-                            Color.clear
-                        ],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                    .frame(width: geometry.size.width * 0.6)
-                    .offset(x: isAnimating ? geometry.size.width : -geometry.size.width * 0.6)
-                }
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .onAppear {
-                withAnimation(
-                    .linear(duration: 1.5)
-                    .repeatForever(autoreverses: false)
-                ) {
-                    isAnimating = true
-                }
-            }
-    }
-}
-
+// MARK: - View Extensions
 extension View {
-    /// 添加闪光加载效果
-    func shimmer() -> some View {
-        modifier(ShimmerModifier())
-    }
-    
     /// 条件性修饰器
     @ViewBuilder
     func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {

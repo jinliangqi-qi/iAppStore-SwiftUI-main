@@ -30,41 +30,36 @@ class AppDetailModel: ObservableObject {
     ///   - regionName: 地区名称
     func searchAppData(_ appId: String?, _ keyWord: String?, _ regionName: String) {
         
-        // 获取地区ID
         let regionId = TSMGConstants.regionTypeListIds[regionName] ?? "cn"
-        var endpoint: APIService.Endpoint = APIService.Endpoint.lookupApp(appid: "", country: "")
         
-        // 根据App ID查询
-        if let appid = appId {
-            endpoint = APIService.Endpoint.lookupApp(appid: appid, country: regionId)
+        guard let appid = appId, !appid.isEmpty else {
+            guard let word = keyWord, !word.isEmpty, let encodeword = word.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+                return
+            }
+            performSearch(endpoint: APIService.Endpoint.searchApp(word: encodeword, country: regionId, limit: 200), regionId: regionId, isAppIdQuery: false, keyWord: word)
+            return
         }
         
-        // 根据关键词搜索
-        if let word = keyWord, let encodeword = word.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
-            endpoint = APIService.Endpoint.searchApp(word: encodeword, country: regionId, limit: 200)
-        }
-        
-        // 开始加载
+        performSearch(endpoint: APIService.Endpoint.lookupApp(appid: appid, country: regionId), regionId: regionId, isAppIdQuery: true, keyWord: nil)
+    }
+    
+    private func performSearch(endpoint: APIService.Endpoint, regionId: String, isAppIdQuery: Bool, keyWord: String?) {
         isLoading = true
         
-        // 发起API请求
-        Task {
+        Task { [weak self] in
+            guard let self = self else { return }
             let result: Result<AppDetailM, APIService.APIError> = await APIService.shared.request(endpoint: endpoint)
             
-            // 结束加载状态
             self.isLoading = false
             
             switch result {
             case let .success(response):
-                // 更新搜索结果
                 self.results = response.results
                 
-                // 如果是通过App ID查询，设置当前App
-                if appId != nil {
+                if isAppIdQuery {
                     self.app = response.results.first
                 }
                 
-                // 如果是关键词搜索，同时尝试通过Bundle ID查询
                 if let word = keyWord {
                     await self.lookupBundleId(word: word, regionId: regionId)
                 }

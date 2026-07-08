@@ -8,6 +8,18 @@
 
 import Foundation
 
+struct Size: Codable, Sendable {
+    let width: Double
+    let height: Double
+    
+    init(width: Double, height: Double) {
+        self.width = width
+        self.height = height
+    }
+    
+    static var zero: Size { Size(width: 0, height: 0) }
+}
+
 // MARK: - AppDetailM
 /// App详情API响应的根模型
 /// 包含查询结果数量和App详情数组
@@ -131,16 +143,26 @@ struct AppDetail: Codable {
     }
     
     var currentVersionReleaseTime: String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
-        if let date = dateFormatter.date(from: currentVersionReleaseDate) as Date? {
-            let dateformat = DateFormatter()
-            dateformat.dateFormat = "yyyy-MM-dd HH:mm:ss"
-            return dateformat.string(from: date)
+        if let date = Self.isoFormatter.date(from: currentVersionReleaseDate) {
+            return Self.displayFormatter.string(from: date)
         } else {
             return currentVersionReleaseDate
         }
     }
+    
+    /// 缓存的 ISO 日期格式化器
+    private static let isoFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
+        return formatter
+    }()
+    
+    /// 缓存的显示日期格式化器
+    private static let displayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        return formatter
+    }()
     
     /// 格式化的文件大小（以MB为单位）
     /// - Returns: 返回格式化后的文件大小字符串，如"25.6 MB"
@@ -158,18 +180,18 @@ struct AppDetail: Codable {
         return String(format: "%.1f", averageUserRating)
     }
     
-    /// 截图展示大小
-    var screenShotSize: CGSize {
+    /// 截图展示大小（纯Swift类型）
+    var screenShotSize: Size {
         let width = 200.0
-        let defaultSize = CGSize(width: width, height: width)
+        let defaultSize = Size(width: width, height: width)
         let url = screenshotUrls?.first ?? ""
         let size = url.imageAppleSize()
-        guard size != CGSize.zero else {
+        guard size != Size.zero else {
             return defaultSize
         }
 
-        let height = Double(size.height) / Double(size.width) * width
-        return CGSize(width: width, height: height);
+        let height = size.height / size.width * width
+        return Size(width: width, height: height)
     }
     
     static func getNewModel(_ artistId: String) -> AppDetail? {

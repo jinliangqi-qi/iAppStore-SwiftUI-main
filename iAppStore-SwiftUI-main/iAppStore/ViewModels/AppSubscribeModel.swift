@@ -15,18 +15,26 @@ import Foundation
 class AppSubscribeModel: ObservableObject {
         
     /// 订阅列表
-    /// 当数据发生变化时自动保存到本地文件
     @Published private(set) var subscribes: [AppSubscribe] {
         didSet {
-            saveSubscribes()
+            needsSave = true
         }
     }
+    
+    /// 标记是否需要保存（批量更新后统一保存）
+    private var needsSave = false
     
     /// 定时器取消器
     private var timerCancellable: AnyCancellable?
     
     /// 检查间隔时间（秒）
     private let interval: TimeInterval = 30
+    
+    /// 请求间隔时间（秒）- 用于避免并发请求风暴
+    private let requestDelay: TimeInterval = 2
+    
+    /// 是否正在检查中
+    private var isChecking = false
     
     /// 本地存储模型名称（保持与旧数据兼容，兼容旧代码中的拼写错误 "Subscripe"）
     private let modelName = "AppSubscripeModel"
@@ -69,6 +77,7 @@ class AppSubscribeModel: ObservableObject {
     /// - Parameter indexSet: 要删除的索引集合
     func removeAt(indexSet: IndexSet) {
         subscribes.remove(atOffsets: indexSet)
+        saveSubscribes()
     }
     
     /// 添加新的App订阅
@@ -93,6 +102,7 @@ class AppSubscribeModel: ObservableObject {
         )
         
         subscribes.append(subscribe)
+        saveSubscribes()
     }
     
     /// 检查指定App是否已存在订阅
@@ -105,64 +115,72 @@ class AppSubscribeModel: ObservableObject {
     // MARK: Private
     
     private func handleTimerTick() {
-        subscribes.enumerated().forEach { (index, app) in
-            if !app.isFinished {
-                checkStatus(app, index: index)
+        guard !isChecking else { return }
+        isChecking = true
+        needsSave = false
+        
+        Task { [weak self] in
+            guard let self = self else { return }
+            let pendingSubscribes = self.subscribes.enumerated().filter { !$0.element.isFinished }
+            
+            for (index, app) in pendingSubscribes {
+                await self.checkStatus(app, index: index)
+                try? await Task.sleep(nanoseconds: UInt64(self.requestDelay * 1_000_000_000))
             }
+            
+            // 批量检查完成后统一保存一次
+            if self.needsSave {
+                self.saveSubscribes()
+                self.needsSave = false
+            }
+            self.isChecking = false
         }
     }
     
-    private func checkStatus(_ app: AppSubscribe, index: Int) {
-        
+    private func checkStatus(_ app: AppSubscribe, index: Int) async {
         let regionId = TSMGConstants.regionTypeListIds[app.regionName] ?? "cn"
         let endpoint: APIService.Endpoint = APIService.Endpoint.lookupApp(appid: app.appId, country: regionId)
         
-        Task {
-            let result: Result<AppDetailM, APIService.APIError> = await APIService.shared.request(endpoint: endpoint)
-            
-            switch result {
-            case let .success(response):
-                switch app.subscribeType {
-                    case "版本更新":
-                        // 版本更新
-                        if response.resultCount > 0, let model = response.results.first {
-                            if app.currentVersion != model.version {
-                                let new = AppSubscribe.updateModel(app: app, checkTime: Date().timeIntervalSince1970, isFinished: true, model.version)
-                                self.subscribes[index] = new
-                                return
-                            }
-                        }
-                        
-                        let new = AppSubscribe.updateModel(app: app, checkTime: Date().timeIntervalSince1970, isFinished: false, nil)
-                        self.subscribes[index] = new
-                        
-                    case "应用上架":
-                        // 应用上架
-                        if response.resultCount > 0, let model = response.results.first {
+        let result: Result<AppDetailM, APIService.APIError> = await APIService.shared.request(endpoint: endpoint)
+        
+        switch result {
+        case let .success(response):
+            switch app.subscribeType {
+                case "版本更新":
+                    if response.resultCount > 0, let model = response.results.first {
+                        if app.currentVersion != model.version {
                             let new = AppSubscribe.updateModel(app: app, checkTime: Date().timeIntervalSince1970, isFinished: true, model.version)
                             self.subscribes[index] = new
-                        } else {
-                            let new = AppSubscribe.updateModel(app: app, checkTime: Date().timeIntervalSince1970, isFinished: false, nil)
-                            self.subscribes[index] = new
+                            return
                         }
-                        
-                    case "应用下架":
-                        //应用下架
-                        if response.resultCount == 0 {
-                            // 已经下架
-                            let new = AppSubscribe.updateModel(app: app, checkTime: Date().timeIntervalSince1970, isFinished: true, nil)
-                            self.subscribes[index] = new
-                        } else {
-                            let new = AppSubscribe.updateModel(app: app, checkTime: Date().timeIntervalSince1970, isFinished: false, nil)
-                            self.subscribes[index] = new
-                        }
-                        
-                    default:
-                        break
-                }
-            case .failure(_):
-                break
+                    }
+                    
+                    let new = AppSubscribe.updateModel(app: app, checkTime: Date().timeIntervalSince1970, isFinished: false, nil)
+                    self.subscribes[index] = new
+                    
+                case "应用上架":
+                    if response.resultCount > 0, let model = response.results.first {
+                        let new = AppSubscribe.updateModel(app: app, checkTime: Date().timeIntervalSince1970, isFinished: true, model.version)
+                        self.subscribes[index] = new
+                    } else {
+                        let new = AppSubscribe.updateModel(app: app, checkTime: Date().timeIntervalSince1970, isFinished: false, nil)
+                        self.subscribes[index] = new
+                    }
+                    
+                case "应用下架":
+                    if response.resultCount == 0 {
+                        let new = AppSubscribe.updateModel(app: app, checkTime: Date().timeIntervalSince1970, isFinished: true, nil)
+                        self.subscribes[index] = new
+                    } else {
+                        let new = AppSubscribe.updateModel(app: app, checkTime: Date().timeIntervalSince1970, isFinished: false, nil)
+                        self.subscribes[index] = new
+                    }
+                    
+                default:
+                    break
             }
+        case .failure(_):
+            break
         }
     }
     

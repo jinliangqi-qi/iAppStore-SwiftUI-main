@@ -115,14 +115,14 @@ struct AppDetailHeaderView: View {
                     )
                     
                     Spacer().frame(height: 15)
-                    Text("v\(appModel.app?.version ?? "")").foregroundStyle(Color.tsmg_systemBackground)
+                    Text("v\(appModel.app?.version ?? "")").foregroundStyle(AppTheme.Colors.Background.primary)
                     Spacer()
                     Text(appModel.app?.averageRating ?? "")
-                        .foregroundStyle(Color.tsmg_systemBackground)
+                        .foregroundStyle(AppTheme.Colors.Background.primary)
                         .font(.largeTitle)
                         .fontWeight(.bold)
                     Text("满分5分").font(.footnote)
-                        .foregroundStyle(Color.tsmg_systemBackground.opacity(0.5)).fontWeight(.heavy)
+                        .foregroundStyle(AppTheme.Colors.Background.primary.opacity(0.5)).fontWeight(.heavy)
                     Spacer()
                 }
                 
@@ -143,7 +143,7 @@ struct AppDetailHeaderView: View {
                     
                     AppDetailTextView(key: "开发者", value: appModel.app?.artistName ?? "")
                     AppDetailTextView(key: "上架时间", value: appModel.app?.releaseTime ?? "")
-                }.foregroundStyle(Color.tsmg_systemBackground)
+                }.foregroundStyle(AppTheme.Colors.Background.primary)
                 
                 Spacer()
             }
@@ -174,7 +174,7 @@ struct AppDetailContentSectionView: View {
             Spacer()
             Image(systemName: "chevron.right.circle").foregroundColor(.gray).font(.body)
         }
-        .background(Color.tsmg_systemBackground)
+        .background(AppTheme.Colors.Background.primary)
         .padding(12)
         .onTapGesture {
             if let urlString = appModel.app?.artistViewUrl, let url = URL(string: urlString) {

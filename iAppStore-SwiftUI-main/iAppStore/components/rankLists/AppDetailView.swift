@@ -20,6 +20,7 @@ struct AppDetailView: View {
     let appId: String
     let regionName: String
     let item: AppRank?
+    let rank: Int?
     
     // MARK: - State
     @StateObject private var appModel = AppDetailModel()
@@ -59,12 +60,12 @@ struct AppDetailView: View {
             VStack(alignment: .leading, spacing: AppTheme.Spacing.default) {
                 HStack(alignment: .top, spacing: AppTheme.Spacing.default) {
                     RoundedRectangle(cornerRadius: AppTheme.CornerRadius.appIcon)
-                        .fill(Color(.systemGray5)).frame(width: 120, height: 120).shimmer()
+                        .fill(AppTheme.Colors.Background.gray5).frame(width: 120, height: 120).shimmer()
                     VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-                        RoundedRectangle(cornerRadius: 4).fill(Color(.systemGray5)).frame(height: 24).shimmer()
-                        RoundedRectangle(cornerRadius: 4).fill(Color(.systemGray5)).frame(width: 120, height: 16).shimmer()
+                        RoundedRectangle(cornerRadius: 4).fill(AppTheme.Colors.Background.gray5).frame(height: 24).shimmer()
+                        RoundedRectangle(cornerRadius: 4).fill(AppTheme.Colors.Background.gray5).frame(width: 120, height: 16).shimmer()
                         Spacer()
-                        RoundedRectangle(cornerRadius: 20).fill(Color(.systemGray5)).frame(height: 44).shimmer()
+                        RoundedRectangle(cornerRadius: 20).fill(AppTheme.Colors.Background.gray5).frame(height: 44).shimmer()
                     }
                 }
                 .padding(AppTheme.Spacing.lg)
@@ -139,7 +140,7 @@ struct AppDetailView: View {
                 Divider().frame(height: 40)
                 QuickInfoItem(title: "年龄", value: app.contentAdvisoryRating, subtitle: "岁")
                 Divider().frame(height: 40)
-                QuickInfoItem(title: "排行榜", value: "#\(item != nil ? "1" : "-")", subtitle: app.primaryGenreName)
+                QuickInfoItem(title: "排行榜", value: rank != nil ? "#\(rank!)" : "-", subtitle: app.primaryGenreName)
                 Divider().frame(height: 40)
                 QuickInfoItem(title: "开发者", value: "", subtitle: app.sellerName, icon: "person.crop.square")
                 Divider().frame(height: 40)
@@ -276,9 +277,13 @@ struct AppDetailView: View {
                     .foregroundStyle(isAppFavorites ? .red : AppTheme.Colors.primary)
                     .symbolEffect(.bounce, value: isAppFavorites)
             }
+            .accessibilityLabel(isAppFavorites ? "取消收藏" : "收藏")
+            .accessibilityHint(isAppFavorites ? "从收藏列表中移除" : "添加到收藏列表")
             Button { isShowingQRCode = true } label: {
                 Image(systemName: "qrcode").font(.system(size: 18)).foregroundStyle(AppTheme.Colors.primary)
             }
+            .accessibilityLabel("二维码")
+            .accessibilityHint("显示下载二维码")
         }
     }
     
@@ -310,5 +315,5 @@ struct AppDetailView: View {
 
 // MARK: - Preview
 #Preview {
-    NavigationStack { AppDetailView(appId: "1669437212", regionName: "中国", item: nil) }
+    NavigationStack { AppDetailView(appId: "1669437212", regionName: "中国", item: nil, rank: nil) }
 }

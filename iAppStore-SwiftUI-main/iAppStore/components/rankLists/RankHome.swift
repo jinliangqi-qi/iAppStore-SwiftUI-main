@@ -24,6 +24,14 @@ struct RankHome: View {
     @StateObject private var appRankModel = AppRankModel()
     @State private var isFilterExpanded = false
     @State private var isRefreshing = false
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    
+    /// iPad 双列布局列数
+    private var gridColumns: [GridItem] {
+        horizontalSizeClass == .regular
+            ? [GridItem(.flexible()), GridItem(.flexible())]
+            : [GridItem(.flexible())]
+    }
     
     // MARK: - Body
     var body: some View {
@@ -32,8 +40,8 @@ struct RankHome: View {
                 AppTheme.Colors.Background.grouped.ignoresSafeArea()
                 mainContent
             }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .principal) { EmptyView() } }
+            .navigationTitle(tabType.navigationTitle)
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) { filterButton }
             }
@@ -50,13 +58,26 @@ struct RankHome: View {
     @ViewBuilder
     private var mainContent: some View {
         if appRankModel.isLoading && appRankModel.results.isEmpty {
-            EnhancedLoadingView(message: "正在获取排行榜")
+            skeletonListView
         } else if appRankModel.results.isEmpty {
             EmptyStateView(type: .noData) {
                 appRankModel.fetchRankData(rankName, categoryName, regionName)
             }
         } else {
             rankListView
+        }
+    }
+    
+    // MARK: - Skeleton List View
+    private var skeletonListView: some View {
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                headerSection
+                if isFilterExpanded {
+                    filterSection
+                }
+                SkeletonList(count: 5)
+            }
         }
     }
     
@@ -79,16 +100,6 @@ struct RankHome: View {
     // MARK: - Header Section
     private var headerSection: some View {
         VStack(spacing: AppTheme.Spacing.md) {
-            // 大标题
-            HStack {
-                Text(tabType.navigationTitle)
-                    .font(.system(size: 34, weight: .bold))
-                    .foregroundStyle(AppTheme.Colors.Text.primary)
-                Spacer()
-            }
-            .padding(.horizontal, AppTheme.Spacing.default)
-            .padding(.top, AppTheme.Spacing.sm)
-            
             // 时间和地区信息
             HStack {
                 Image(systemName: "clock").font(.caption).foregroundStyle(.tertiary)
@@ -101,7 +112,7 @@ struct RankHome: View {
             .padding(.horizontal, AppTheme.Spacing.default)
             filterTagsView
         }
-        .padding(.top, AppTheme.Spacing.md).padding(.bottom, AppTheme.Spacing.sm)
+        .padding(.top, AppTheme.Spacing.sm).padding(.bottom, AppTheme.Spacing.sm)
         .background(AppTheme.Colors.Background.primary)
     }
     
@@ -139,10 +150,10 @@ struct RankHome: View {
     
     // MARK: - Rank Cards Section
     private var rankCardsSection: some View {
-        LazyVStack(spacing: 1) {
+        LazyVGrid(columns: gridColumns, spacing: 1) {
             ForEach(Array(appRankModel.results.enumerated()), id: \.element.imName.label) { index, item in
                 NavigationLink {
-                    AppDetailView(appId: item.id.attributes.imID, regionName: regionName, item: item)
+                    AppDetailView(appId: item.id.attributes.imID, regionName: regionName, item: item, rank: index + 1)
                 } label: {
                     ModernRankCell(index: index, item: item, regionName: regionName)
                 }
@@ -165,6 +176,8 @@ struct RankHome: View {
             Image(systemName: isFilterExpanded ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
                 .font(.system(size: 20)).symbolRenderingMode(.hierarchical).foregroundStyle(AppTheme.Colors.primary)
         }
+        .accessibilityLabel("筛选")
+        .accessibilityHint(isFilterExpanded ? "收起筛选选项" : "展开筛选选项")
     }
     
     // MARK: - Helper Methods

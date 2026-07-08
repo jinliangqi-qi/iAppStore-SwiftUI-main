@@ -120,7 +120,7 @@ struct AppCellView<Data: AppCellData>: View {
     private func rankColor(for rank: Int) -> Color {
         switch rank {
         case 1: return .orange
-        case 2: return Color(.systemGray)
+        case 2: return AppTheme.Colors.Background.gray
         case 3: return Color.brown
         default: return AppTheme.Colors.Text.secondary
         }
@@ -169,7 +169,7 @@ struct AppCellView<Data: AppCellData>: View {
             .foregroundStyle(AppTheme.Colors.Text.secondary)
             .padding(.horizontal, AppTheme.Spacing.sm)
             .padding(.vertical, AppTheme.Spacing.xs)
-            .background(Color(.systemGray6))
+            .background(AppTheme.Colors.Background.gray6)
             .clipShape(Capsule())
     }
     

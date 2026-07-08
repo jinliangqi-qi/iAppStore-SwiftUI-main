@@ -21,7 +21,24 @@ struct SearchHome: View {
     @State private var isRegionPickerPresented = false
     @FocusState private var isSearchFocused: Bool
     @StateObject private var appModel = AppDetailModel()
-    @State private var searchHistory: [String] = UserDefaults.standard.stringArray(forKey: "searchHistory") ?? []
+    @ObservedObject private var networkChecker = NetworkStateChecker.shared
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @AppStorage("searchHistory") private var searchHistoryRaw: String = ""
+    private var searchHistory: [String] {
+        get {
+            guard let data = searchHistoryRaw.data(using: .utf8),
+                  let array = try? JSONDecoder().decode([String].self, from: data) else {
+                return []
+            }
+            return array
+        }
+        set {
+            if let data = try? JSONEncoder().encode(newValue),
+               let string = String(data: data, encoding: .utf8) {
+                searchHistoryRaw = string
+            }
+        }
+    }
     private let hotSearchTerms = ["微信", "抖音", "王者荣耀", "支付宝", "淘宝", "京东", "美团", "饿了么"]
     
     // MARK: - Body
@@ -41,6 +58,11 @@ struct SearchHome: View {
                     if !searchText.isEmpty { performSearch() }
                 })
             }
+            .alert("网络未连接", isPresented: .constant(networkChecker.path.status == .unsatisfied)) {
+                Button("确定", role: .cancel) { }
+            } message: {
+                Text("请检查网络连接后重试")
+            }
         }
     }
     
@@ -52,7 +74,7 @@ struct SearchHome: View {
             if searchText.isEmpty {
                 searchSuggestionsView
             } else if appModel.isLoading {
-                EnhancedLoadingView(message: "正在搜索").frame(maxHeight: .infinity)
+                searchSkeletonView
             } else if appModel.results.isEmpty {
                 EmptyStateView(type: .noSearchResults)
             } else {
@@ -76,10 +98,11 @@ struct SearchHome: View {
                         Image(systemName: "xmark.circle.fill").font(.body).foregroundStyle(AppTheme.Colors.Text.tertiary)
                     }
                     .buttonStyle(PlainButtonStyle())
+                    .accessibilityLabel("清除搜索内容")
                 }
             }
             .padding(.horizontal, AppTheme.Spacing.md).padding(.vertical, AppTheme.Spacing.sm)
-            .background(Color(.systemGray6)).clipShape(RoundedRectangle(cornerRadius: AppTheme.CornerRadius.small))
+            .background(AppTheme.Colors.Background.gray6).clipShape(RoundedRectangle(cornerRadius: AppTheme.CornerRadius.small))
             
             if isSearchFocused || !searchText.isEmpty {
                 Button("取消") {
@@ -104,6 +127,8 @@ struct SearchHome: View {
             }
             .foregroundStyle(AppTheme.Colors.primary)
         }
+        .accessibilityLabel("选择地区，当前\(regionName)")
+        .accessibilityHint("点击选择搜索地区")
     }
     
     // MARK: - Search Suggestions View
@@ -125,8 +150,7 @@ struct SearchHome: View {
                 Spacer()
                 Button {
                     withAnimation(AppTheme.Animation.default) {
-                        searchHistory.removeAll()
-                        UserDefaults.standard.set([], forKey: "searchHistory")
+                        searchHistory = []
                     }
                 } label: {
                     Text("清除").font(AppTheme.Typography.subheadline).foregroundStyle(AppTheme.Colors.primary)
@@ -160,21 +184,42 @@ struct SearchHome: View {
         }
     }
     
-    // MARK: - Search Results List
-    private var searchResultsList: some View {
+    // MARK: - Search Skeleton View
+    private var searchSkeletonView: some View {
         List {
-            ForEach(Array(appModel.results.enumerated()), id: \.element.trackId) { index, item in
-                NavigationLink {
-                    AppDetailView(appId: String(item.trackId), regionName: regionName, item: nil)
-                } label: {
-                    SearchResultCell(index: index, item: item)
-                }
-                .listRowInsets(EdgeInsets(top: AppTheme.Spacing.sm, leading: AppTheme.Spacing.default,
-                                         bottom: AppTheme.Spacing.sm, trailing: AppTheme.Spacing.default))
-                .listRowBackground(AppTheme.Colors.Background.primary)
+            ForEach(0..<5, id: \.self) { _ in
+                SkeletonRow(showRank: false)
+                    .listRowInsets(EdgeInsets(top: AppTheme.Spacing.sm, leading: AppTheme.Spacing.default,
+                                              bottom: AppTheme.Spacing.sm, trailing: AppTheme.Spacing.default))
+                    .listRowBackground(AppTheme.Colors.Background.primary)
             }
         }
         .listStyle(.plain)
+    }
+    
+    // MARK: - Search Results List
+    private var searchResultsList: some View {
+        let columns = horizontalSizeClass == .regular
+            ? [GridItem(.flexible()), GridItem(.flexible())]
+            : [GridItem(.flexible())]
+        
+        return ScrollView {
+            LazyVGrid(columns: columns, spacing: AppTheme.Spacing.sm) {
+                ForEach(Array(appModel.results.enumerated()), id: \.element.trackId) { index, item in
+                    NavigationLink {
+                        AppDetailView(appId: String(item.trackId), regionName: regionName, item: nil, rank: nil)
+                    } label: {
+                        SearchResultCell(index: index, item: item)
+                            .padding(AppTheme.Spacing.default)
+                            .background(AppTheme.Colors.Background.primary)
+                            .clipShape(RoundedRectangle(cornerRadius: AppTheme.CornerRadius.medium))
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+            }
+            .padding(.horizontal, AppTheme.Spacing.default)
+            .padding(.vertical, AppTheme.Spacing.sm)
+        }
         .scrollDismissesKeyboard(.immediately)
     }
     
@@ -186,10 +231,11 @@ struct SearchHome: View {
     
     private func saveSearchHistory() {
         guard !searchText.isEmpty else { return }
-        searchHistory.removeAll { $0 == searchText }
-        searchHistory.insert(searchText, at: 0)
-        if searchHistory.count > 20 { searchHistory = Array(searchHistory.prefix(20)) }
-        UserDefaults.standard.set(searchHistory, forKey: "searchHistory")
+        var history = searchHistory
+        history.removeAll { $0 == searchText }
+        history.insert(searchText, at: 0)
+        if history.count > 20 { history = Array(history.prefix(20)) }
+        searchHistory = history
     }
     
     private func hideKeyboard() {
