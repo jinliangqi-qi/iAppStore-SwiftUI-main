@@ -196,9 +196,6 @@ struct SkeletonList: View {
     LoadingView()
 }
 
-#Preview("Enhanced Loading") {
-    EnhancedLoadingView(message: "正在加载数据...")
-}
 
 #Preview("Skeleton Row") {
     SkeletonRow(showRank: true)
