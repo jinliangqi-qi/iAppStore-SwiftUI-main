@@ -26,7 +26,7 @@ struct AppDetailContentView: View {
     var body: some View {
         if appModel.app == nil {
             Rectangle()
-                .overlay(Color.tsmg_systemGroupedBackground)
+                .overlay(Color(uiColor: .systemGroupedBackground))
                 .cornerRadius(20)
                 .padding(.all)
                 .animation(.easeInOut, value: appModel.app == nil)

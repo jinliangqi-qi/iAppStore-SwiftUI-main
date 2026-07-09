@@ -150,7 +150,7 @@ struct SearchHome: View {
                 Spacer()
                 Button {
                     withAnimation(AppTheme.Animation.default) {
-                        searchHistory = []
+                        searchHistoryRaw = ""
                     }
                 } label: {
                     Text("清除").font(AppTheme.Typography.subheadline).foregroundStyle(AppTheme.Colors.primary)
@@ -235,7 +235,10 @@ struct SearchHome: View {
         history.removeAll { $0 == searchText }
         history.insert(searchText, at: 0)
         if history.count > 20 { history = Array(history.prefix(20)) }
-        searchHistory = history
+        if let data = try? JSONEncoder().encode(history),
+           let string = String(data: data, encoding: .utf8) {
+            searchHistoryRaw = string
+        }
     }
     
     private func hideKeyboard() {

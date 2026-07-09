@@ -38,7 +38,7 @@ struct RankSortView: View {
                 },
                 label: {
                     sortLabels
-                        .accentColor(Color.tsmg_label)
+                        .accentColor(.primary)
                 }
             )
             .buttonStyle(PlainButtonStyle())

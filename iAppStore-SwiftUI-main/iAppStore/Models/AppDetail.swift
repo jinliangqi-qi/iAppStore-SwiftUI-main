@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct Size: Codable, Sendable {
+public struct Size: Codable, Sendable, Equatable {
     let width: Double
     let height: Double
     

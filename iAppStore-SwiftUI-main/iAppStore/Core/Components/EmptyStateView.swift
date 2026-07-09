@@ -171,7 +171,7 @@ struct EmptyStateView: View {
 
 // MARK: - Loading View (Enhanced)
 /// 增强版加载视图
-struct EnhancedLoadingView: View {
+struct AnimatedLoadingView: View {
     
     var message: String = "正在加载..."
     @State private var rotation: Double = 0
@@ -232,7 +232,7 @@ struct EnhancedLoadingView: View {
             EmptyStateView(type: .noSubscriptions)
                 .frame(height: 300)
             
-            EnhancedLoadingView()
+            AnimatedLoadingView()
                 .frame(height: 200)
         }
     }

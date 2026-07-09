@@ -51,6 +51,7 @@
 		AA0001172026020200000017 /* RankComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001162026020200000016 /* RankComponents.swift */; };
 		AA0001192026020200000019 /* AppDetailSubviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001182026020200000018 /* AppDetailSubviews.swift */; };
 		AA00011B202602020000001B /* RegionConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011A202602020000001A /* RegionConstants.swift */; };
+		AA00011D202602020000001D /* FavoritesHome.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011C202602020000001C /* FavoritesHome.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -118,6 +119,7 @@
 		AA0001162026020200000016 /* RankComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RankComponents.swift; sourceTree = "<group>"; };
 		AA0001182026020200000018 /* AppDetailSubviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDetailSubviews.swift; sourceTree = "<group>"; };
 		AA00011A202602020000001A /* RegionConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegionConstants.swift; sourceTree = "<group>"; };
+		AA00011C202602020000001C /* FavoritesHome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesHome.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -188,6 +190,7 @@
 			children = (
 				6D738E2B2779736400A4A76E /* SubscriptionHome.swift */,
 				6D490E55278328E400B5DD80 /* SubscriptionAddView.swift */,
+				AA00011C202602020000001C /* FavoritesHome.swift */,
 			);
 			path = subscription;
 			sourceTree = "<group>";
@@ -506,6 +509,7 @@
 				AA0001172026020200000017 /* RankComponents.swift in Sources */,
 				AA0001192026020200000019 /* AppDetailSubviews.swift in Sources */,
 				AA00011B202602020000001B /* RegionConstants.swift in Sources */,
+				AA00011D202602020000001D /* FavoritesHome.swift in Sources */,
 				6D605A17278B15950001C69F /* ShareSheet.swift in Sources */,
 				6C51177627A2755100D5E21D /* NetworkMonitor.swift in Sources */,
 				6D7A394D2A46C79F00CA7F6E /* AppFavoritesModel.swift in Sources */,
